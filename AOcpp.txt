@@ -1,0 +1,139 @@
+#include <iostream>
+#include <map>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <numeric>
+#include <sstream>
+
+using namespace std;
+
+map<string, int> Cost(map<string, int> &H, map<string, vector<string>> &condition, int weight)
+{
+    map<string, int> cost;
+    if (condition.find("AND") != condition.end())
+    {
+        vector<string> AND_nodes = condition["AND"];
+        string Path_A = accumulate(next(AND_nodes.begin()), AND_nodes.end(), AND_nodes[0], [](string a, string b)
+                                   { return a + " AND " + b; });
+        int PathA = accumulate(AND_nodes.begin(), AND_nodes.end(), 0, [&](int sum, string node)
+                               { return sum + H[node] + weight; });
+        cost[Path_A] = PathA;
+    }
+    if (condition.find("OR") != condition.end())
+    {
+        vector<string> OR_nodes = condition["OR"];
+        string Path_B = accumulate(next(OR_nodes.begin()), OR_nodes.end(), OR_nodes[0], [](string a, string b)
+                                   { return a + " OR " + b; });
+        int PathB = numeric_limits<int>::max();
+        for (const auto &node : OR_nodes)
+        {
+            PathB = min(PathB, H[node] + weight);
+        }
+        cost[Path_B] = PathB;
+    }
+    return cost;
+}
+
+map<string, map<string, int>> UpdateCost(map<string, int> &H, map<string, map<string, vector<string>>> &Conditions, int weight)
+{
+    vector<string> Main_nodes;
+    for (const auto &kv : Conditions)
+    {
+        Main_nodes.push_back(kv.first);
+    }
+    reverse(Main_nodes.begin(), Main_nodes.end());
+
+    map<string, map<string, int>> least_cost;
+    for (const auto &key : Main_nodes)
+    {
+        map<string, vector<string>> condition = Conditions[key];
+        cout << key << ": ";
+        for (const auto &c : condition)
+        {
+            cout << c.first << " [ ";
+            for (const auto &val : c.second)
+            {
+                cout << val << " ";
+            }
+            cout << "] ";
+        }
+        cout << ">>> ";
+        map<string, int> c = Cost(H, condition, weight);
+        for (const auto &kv : c)
+        {
+            cout << kv.first << ": " << kv.second << " ";
+        }
+        cout << endl;
+        H[key] = min_element(c.begin(), c.end(), [](const auto &a, const auto &b)
+                             { return a.second < b.second; })
+                     ->second;
+        least_cost[key] = Cost(H, condition, weight);
+    }
+    return least_cost;
+}
+
+string ShortestPath(string Start, map<string, map<string, int>> &Updated_cost, map<string, int> &H)
+{
+    string Path = Start;
+    if (Updated_cost.find(Start) != Updated_cost.end())
+    {
+        int Min_cost = min_element(Updated_cost[Start].begin(), Updated_cost[Start].end(), [](const auto &a, const auto &b)
+                                   { return a.second < b.second; })
+                           ->second;
+        vector<string> key;
+        vector<int> values;
+        for (const auto &kv : Updated_cost[Start])
+        {
+            key.push_back(kv.first);
+            values.push_back(kv.second);
+        }
+        int Index = find(values.begin(), values.end(), Min_cost) - values.begin();
+        vector<string> Next;
+        stringstream ss(key[Index]);
+        string token;
+        while (getline(ss, token, ' '))
+        {
+            if (token != "AND" && token != "OR")
+            {
+                Next.push_back(token);
+            }
+        }
+        if (Next.size() == 1)
+        {
+            Start = Next[0];
+            Path += "<--" + ShortestPath(Start, Updated_cost, H);
+        }
+        else
+        {
+            Path += "<--(" + key[Index] + ") ";
+            Start = Next[0];
+            Path += "[" + ShortestPath(Start, Updated_cost, H) + " + ";
+            Start = Next[Next.size() - 1];
+            Path += ShortestPath(Start, Updated_cost, H) + "]";
+        }
+    }
+    return Path;
+}
+
+int main()
+{
+    map<string, int> H = {
+        {"A", -1}, {"B", 5}, {"C", 2}, {"D", 4}, {"E", 7}, {"F", 9}, {"G", 3}, {"H", 0}, {"I", 0}, {"J", 0}};
+
+    map<string, map<string, vector<string>>> Conditions = {
+        {"A", {{"OR", {"B"}}, {"AND", {"C", "D"}}}},
+        {"B", {{"OR", {"E", "F"}}}},
+        {"C", {{"OR", {"G"}}, {"AND", {"H", "I"}}}},
+        {"D", {{"OR", {"J"}}}}};
+
+    int weight = 1;
+
+    cout << "Updated Cost :" << endl;
+    map<string, map<string, int>> Updated_cost = UpdateCost(H, Conditions, weight);
+    cout << string(75, '*') << endl;
+    cout << "Shortest Path :" << endl;
+    cout << ShortestPath("A", Updated_cost, H) << endl;
+
+    return 0;
+}
