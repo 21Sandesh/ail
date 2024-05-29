@@ -1,0 +1,151 @@
+// uninformed/bds.cpp
+
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <unordered_set>
+
+using namespace std;
+
+vector<int> bidirectionalSearch(const vector<vector<int>> &adj_list, int start, int goal)
+{
+    queue<int> frontier_start, frontier_end;
+    unordered_set<int> visited_start, visited_end;
+    vector<int> parent_start(adj_list.size(), -1), parent_end(adj_list.size(), -1);
+
+    frontier_start.push(start);
+    frontier_end.push(goal);
+    visited_start.insert(start);
+    visited_end.insert(goal);
+
+    while (!frontier_start.empty() && !frontier_end.empty())
+    {
+        // Perform BFS from the start node
+        int current_start = frontier_start.front();
+        frontier_start.pop();
+
+        for (int neighbor : adj_list[current_start])
+        {
+            if (visited_end.count(neighbor))
+            {
+                // Path found
+                vector<int> path;
+                for (int v = current_start; v != -1; v = parent_start[v])
+                {
+                    path.push_back(v);
+                }
+                for (int v = neighbor; v != -1; v = parent_end[v])
+                {
+                    path.push_back(v);
+                }
+                return path;
+            }
+
+            if (!visited_start.count(neighbor))
+            {
+                visited_start.insert(neighbor);
+                parent_start[neighbor] = current_start;
+                frontier_start.push(neighbor);
+            }
+        }
+
+        // Perform BFS from the goal node
+        int current_end = frontier_end.front();
+        frontier_end.pop();
+
+        for (int neighbor : adj_list[current_end])
+        {
+            if (visited_start.count(neighbor))
+            {
+                // Path found
+                vector<int> path;
+                for (int v = neighbor; v != -1; v = parent_start[v])
+                {
+                    path.push_back(v);
+                }
+                for (int v = current_end; v != -1; v = parent_end[v])
+                {
+                    path.push_back(v);
+                }
+                return path;
+            }
+
+            if (!visited_end.count(neighbor))
+            {
+                visited_end.insert(neighbor);
+                parent_end[neighbor] = current_end;
+                frontier_end.push(neighbor);
+            }
+        }
+    }
+
+    // No path found
+    return vector<int>();
+}
+
+int BidirectionalSearch()
+{
+    int vertices, edges;
+    cout << "Enter the number of vertices: ";
+    cin >> vertices;
+    cout << "Enter the number of edges: ";
+    cin >> edges;
+
+    vector<vector<int>> adj_list(vertices);
+
+    cout << "Enter edges (from to):" << endl;
+    for (int i = 0; i < edges; ++i)
+    {
+        int from, to;
+        cin >> from >> to;
+        adj_list[from].push_back(to);
+        adj_list[to].push_back(from);
+    }
+
+    int start, goal;
+    cout << "Enter start node: ";
+    cin >> start;
+    cout << "Enter goal node: ";
+    cin >> goal;
+
+    vector<int> path = bidirectionalSearch(adj_list, start, goal);
+
+    if (!path.empty())
+    {
+        cout << "Path found: ";
+        for (int node : path)
+        {
+            cout << node << " ";
+        }
+        cout << endl;
+    }
+    else
+    {
+        cout << "No path found from " << start << " to " << goal << endl;
+    }
+
+    return 0;
+}
+
+/*
+
+15
+14
+0 4
+1 4
+2 5
+3 5
+4 6
+5 6
+6 7
+7 8
+8 9
+8 10
+9 11
+9 12
+10 13
+10 14
+0
+14
+
+*/

@@ -1,0 +1,399 @@
+#include <iostream>
+#include <typeinfo>
+#include <conio.h>
+#include <unistd.h>
+#include <vector>
+
+using namespace std;
+
+// supportLib
+void printBoard(const vector<vector<char>> &board, string GameMode)
+{
+    int counter = 1;
+    system("CLS");
+    cout << "TIC TAC TOE - User vs " << GameMode << endl;
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            cout << board[i][j];
+            if (j < 2)
+            {
+                cout << " | ";
+            }
+        }
+        cout << "\t";
+        for (int j = 0; j < 3; ++j)
+        {
+            cout << counter++;
+            if (j < 2)
+            {
+                cout << " | ";
+            }
+        }
+        cout << endl;
+        if (i < 2)
+        {
+            cout << "---------\t---------" << endl;
+        }
+    }
+}
+
+int ValidateMove(const vector<vector<char>> &board, string charmove)
+{
+    if (charmove[0] >= '1' && charmove[0] <= '9' && charmove.length() == 1)
+    {
+        return charmove[0] - '0';
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+char ValidateTurn(string charmove)
+{
+    if ((charmove[0] == 'X' || charmove[0] == 'x') && charmove.length() == 1)
+    {
+        return 'X';
+    }
+    else if ((charmove[0] == 'O' || charmove[0] == 'o') && charmove.length() == 1)
+    {
+        return 'O';
+    }
+    else
+    {
+        return ' ';
+    }
+}
+
+int convertChar(char c)
+{
+    if (c >= '1' && c <= '9')
+    {
+        return c - '0';
+    }
+    else if (c == '0')
+    {
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+bool checkWin(const vector<vector<char>> &board, char player)
+{
+    for (int i = 0; i < 3; ++i)
+    {
+        if ((board[i][0] == player && board[i][1] == player && board[i][2] == player) ||
+            (board[0][i] == player && board[1][i] == player && board[2][i] == player))
+        {
+            return true;
+        }
+    }
+
+    if ((board[0][0] == player && board[1][1] == player && board[2][2] == player) ||
+        (board[0][2] == player && board[1][1] == player && board[2][0] == player))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool isBoardFull(const vector<vector<char>> &board)
+{
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            if (board[i][j] == ' ')
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+void convertMove(int move, int &row, int &col)
+{
+    move--;
+    row = move / 3;
+    col = move % 3;
+}
+
+int evaluate(const vector<vector<char>> &board)
+{
+    if (checkWin(board, 'X'))
+    {
+        return -1;
+    }
+    else if (checkWin(board, 'O'))
+    {
+        return 1;
+    }
+
+    if (isBoardFull(board))
+    {
+        return 0;
+    }
+
+    return -2;
+}
+
+int minimax(vector<vector<char>> &board, int depth, bool isMaximizing)
+{
+    int score = evaluate(board);
+
+    if (score != -2)
+    {
+        return score;
+    }
+
+    if (isMaximizing)
+    {
+        int maxEval = -1000;
+        for (int i = 0; i < 3; ++i)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                if (board[i][j] == ' ')
+                {
+                    board[i][j] = 'O';
+                    int eval = minimax(board, depth + 1, false);
+                    board[i][j] = ' ';
+                    maxEval = max(maxEval, eval);
+                }
+            }
+        }
+        return maxEval;
+    }
+    else
+    {
+        int minEval = 1000;
+        for (int i = 0; i < 3; ++i)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                if (board[i][j] == ' ')
+                {
+                    board[i][j] = 'X';
+                    int eval = minimax(board, depth + 1, true);
+                    board[i][j] = ' ';
+                    minEval = min(minEval, eval);
+                }
+            }
+        }
+        return minEval;
+    }
+}
+
+// tictactoe
+void tictactoe()
+{
+    vector<vector<char>> board(3, vector<char>(3, ' '));
+    char currentPlayer = 'O';
+    string charmove;
+    int move, flag = 0;
+
+    while (true)
+    {
+        printBoard(board, "User");
+
+        cout << "Player " << currentPlayer << ",\nEnter your move (1-9): ";
+        getline(cin, charmove);
+
+        move = ValidateMove(board, charmove);
+
+        if (move == -1 && flag == 1)
+        {
+            cout << "Invalid Move. Please Enter Valid Move" << endl;
+            getch();
+            continue;
+        }
+        else if (flag == 1)
+        {
+            int row, col;
+            convertMove(move, row, col);
+            board[row][col] = currentPlayer;
+        }
+
+        if (checkWin(board, currentPlayer))
+        {
+            printBoard(board, "User");
+            cout << "Player " << currentPlayer << " wins!" << endl;
+            break;
+        }
+
+        if (isBoardFull(board))
+        {
+            printBoard(board, "User");
+            cout << "It's a tie!" << endl;
+            cout << "Press any Key to Continue...";
+            getch();
+            system("cls");
+            break;
+        }
+
+        if (flag == 1)
+        {
+            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+        }
+        flag = 1;
+    }
+}
+
+// tictactoe AI
+void makeAIMove(vector<vector<char>> &board)
+{
+    int bestMove = -1;
+    int bestScore = -1000;
+
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            if (board[i][j] == ' ')
+            {
+                board[i][j] = 'O';
+                int moveScore = minimax(board, 0, false);
+                board[i][j] = ' ';
+
+                if (moveScore > bestScore)
+                {
+                    bestScore = moveScore;
+                    bestMove = i * 3 + j + 1;
+                }
+            }
+        }
+    }
+
+    int row, col;
+    convertMove(bestMove, row, col);
+    board[row][col] = 'O';
+}
+
+void tictactoeai()
+{
+    vector<vector<char>> board(3, vector<char>(3, ' '));
+    char currentPlayer = 'X';
+    string charmove;
+    int move, flag = 0;
+
+    while (true)
+    {
+        printBoard(board, "AI");
+
+        if (currentPlayer == 'X')
+        {
+            cout << "Player " << currentPlayer << ",\nEnter your move (1-9): ";
+            getline(cin, charmove);
+
+            move = ValidateMove(board, charmove);
+
+            if (move == -1 && flag == 1)
+            {
+                cout << "Invalid Move. Please Enter Valid Move" << endl;
+                getch();
+                continue;
+            }
+            else if (flag == 1)
+            {
+                int row, col;
+                convertMove(move, row, col);
+                board[row][col] = currentPlayer;
+            }
+        }
+        else
+        {
+            cout << "Thinking";
+            for (int j = 0; j < 3; ++j)
+            {
+                cout << ".";
+                usleep(500000);
+            }
+            cout << endl;
+            makeAIMove(board);
+        }
+
+        if (checkWin(board, currentPlayer))
+        {
+            printBoard(board, "AI");
+            if (currentPlayer == 'O')
+            {
+                cout << "AI Wins!" << endl;
+                cout << "Press any Key to Continue...";
+                getch();
+                system("cls");
+            }
+            else
+            {
+                cout << "Player " << currentPlayer << " Wins!" << endl;
+                cout << "Press any Key to Continue...";
+                getch();
+                system("cls");
+            }
+            break;
+        }
+
+        if (isBoardFull(board))
+        {
+            printBoard(board, "AI");
+            cout << "It's a tie!" << endl;
+            cout << "Press any Key to Continue...";
+            getch();
+            system("cls");
+            break;
+        }
+
+        if (flag == 1)
+        {
+            currentPlayer = (currentPlayer == 'X') ? 'O' : 'X';
+        }
+        flag = 1;
+    }
+}
+
+void Menu()
+{
+    cout << "\nWelcome to Tic Tac Toe!" << endl;
+    cout << "\t[1] Play against a Friend" << endl;
+    cout << "\t[2] Play against the Computer" << endl;
+    cout << "\t[0] Quit" << endl;
+    cout << "Enter your choice: ";
+}
+
+int main()
+{
+    int flag = 3;
+    while (flag != 0)
+    {
+        Menu();
+        cin >> flag;
+        switch (flag)
+        {
+        case 1:
+        {
+            tictactoe();
+            break;
+        }
+        case 2:
+        {
+            tictactoeai();
+            break;
+        }
+        case 0:
+        {
+            break;
+        }
+        default:
+        {
+            cout << "Invalid choice. Try again." << endl;
+            break;
+        }
+        }
+    }
+}

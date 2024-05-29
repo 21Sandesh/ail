@@ -1,0 +1,93 @@
+// uninformed/iddfs.cpp
+
+#include <iostream>
+#include <vector>
+#include <list>
+
+using namespace std;
+
+bool dlsRecursive(const vector<vector<int>> &adj_list, int start, int target, int depth, vector<bool> &visited)
+{
+    if (start == target)
+    {
+        cout << "Node " << target << " found!" << endl;
+        return true;
+    }
+
+    if (depth == 0)
+    {
+        return false; // Reached the depth limit, stop expanding
+    }
+
+    visited[start] = true;
+
+    for (int neighbor : adj_list[start])
+    {
+        if (!visited[neighbor])
+        {
+            if (dlsRecursive(adj_list, neighbor, target, depth - 1, visited))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool iddfs(const vector<vector<int>> &adj_list, int start, int target, int maxDepth)
+{
+    for (int depth = 0; depth <= maxDepth; ++depth)
+    {
+        vector<bool> visited(adj_list.size(), false);
+        cout << "Depth limit: " << depth << endl;
+        if (dlsRecursive(adj_list, start, target, depth, visited))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+int IterativeDeepeningSearch()
+{
+    int vertices, start, target, maxDepth;
+    cout << "Enter the number of vertices: ";
+    cin >> vertices;
+
+    vector<vector<int>> adj_list(vertices);
+
+    adj_list = GraphInput(vertices);
+
+    cout << "Enter Node to Start From: ";
+    cin >> start;
+
+    cout << "Enter Target Node: ";
+    cin >> target;
+
+    cout << "Enter Maximum Depth: ";
+    cin >> maxDepth;
+
+    if (iddfs(adj_list, start, target, maxDepth))
+    {
+        cout << "Node " << target << " found from node " << start << endl;
+    }
+    else
+    {
+        cout << "Node " << target << " not found from node " << start << endl;
+    }
+
+    return 0;
+}
+
+/*
+(0, 1);
+(0, 2);
+(1, 3);
+(1, 4);
+(2, 5);
+(2, 6);
+
+target = 6, maxdepth = 3, src = 0
+
+*/

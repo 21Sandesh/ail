@@ -1,0 +1,75 @@
+#include <iostream>
+#include <vector>
+#include <conio.h>
+
+using namespace std;
+
+bool isSafe(int row, int col, vector<int> &board)
+{
+    for (int i = 0; i < row; ++i)
+    {
+        if (board[i] == col || board[i] - i == col - row || board[i] + i == col + row)
+            return false;
+    }
+    return true;
+}
+
+bool solveNQueens(int row, int n, vector<int> &board)
+{
+    if (row == n)
+        return true;
+    for (int col = 0; col < n; ++col)
+    {
+        if (isSafe(row, col, board))
+        {
+            board[row] = col;
+            if (solveNQueens(row + 1, n, board))
+                return true;
+        }
+    }
+    return false;
+}
+
+void printSolution(int n, vector<int> &board)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        for (int j = 0; j < n; ++j)
+        {
+            if (board[i] == j)
+                cout << "Q ";
+            else
+                cout << ". ";
+        }
+        cout << endl;
+    }
+}
+
+int main()
+{
+    int n;
+    cout << "Enter the number of queens (N): ";
+    cin >> n;
+
+    while (n > 0)
+    {
+        vector<int> board(n, -1);
+
+        if (solveNQueens(0, n, board))
+        {
+            cout << "Solution found:\n";
+            printSolution(n, board);
+        }
+        else
+        {
+            cout << "No solution exists.\n";
+        }
+        cout << "Press any Key to Continue...";
+        getch();
+        system("cls");
+        cout << "Enter the number of queens (N): ";
+        cin >> n;
+    }
+
+    return 0;
+}

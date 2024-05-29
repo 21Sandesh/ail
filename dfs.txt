@@ -1,0 +1,71 @@
+// uninformed/dfs.cpp
+
+#include <iostream>
+#include <vector>
+#include <list>
+
+using namespace std;
+
+void dfsRecursive(const vector<vector<int>> &adj_list, int start, vector<bool> &visited, vector<int> &order)
+{
+    visited[start] = true;
+    order.push_back(start);
+
+    for (int neighbor : adj_list[start])
+    {
+        if (!visited[neighbor])
+        {
+            dfsRecursive(adj_list, neighbor, visited, order);
+        }
+    }
+}
+
+vector<int> dfs(const vector<vector<int>> &adj_list, int start)
+{
+    int numVertices = adj_list.size();
+    vector<bool> visited(numVertices, false);
+    vector<int> order;
+
+    dfsRecursive(adj_list, start, visited, order);
+    return order;
+}
+int DepthFirstSearch()
+{
+    int vertices;
+    cout << "Enter the number of vertices: ";
+    cin >> vertices;
+
+    vector<vector<int>> adj_list;
+
+    adj_list = GraphInput(vertices);
+
+    cout << "Enter Node to Start From: ";
+    cin >> vertices;
+
+    vector<int> order = dfs(adj_list, vertices);
+
+    cout << "DFS traversal order: ";
+    for (int i : order)
+    {
+        cout << i << " ";
+    }
+    cout << endl;
+
+    return 0;
+}
+
+/*
+
+4
+2
+1
+2
+1
+2
+1
+0
+1
+3
+2
+
+*/
